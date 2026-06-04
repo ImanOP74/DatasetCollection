@@ -10,8 +10,6 @@ export async function GET() {
         participant:participants (
           participant_code,
           name,
-          accent,
-          native_language,
           environment,
           device_type
         )

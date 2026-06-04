@@ -43,7 +43,6 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
   const [filterPhrase, setFilterPhrase] = useState('All');
   const [filterDevice, setFilterDevice] = useState('All');
   const [filterEnvironment, setFilterEnvironment] = useState('All');
-  const [filterAccent, setFilterAccent] = useState('All');
 
   // Export Progress State
   const [isExporting, setIsExporting] = useState(false);
@@ -173,11 +172,10 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
       const matchPhrase = filterPhrase === 'All' || rec.phrase === filterPhrase;
       const matchDevice = filterDevice === 'All' || participant.device_type === filterDevice;
       const matchEnv = filterEnvironment === 'All' || participant.environment === filterEnvironment;
-      const matchAccent = filterAccent === 'All' || participant.accent === filterAccent;
 
-      return matchSearch && matchPhrase && matchDevice && matchEnv && matchAccent;
+      return matchSearch && matchPhrase && matchDevice && matchEnv;
     });
-  }, [recordings, searchTerm, filterPhrase, filterDevice, filterEnvironment, filterAccent]);
+  }, [recordings, searchTerm, filterPhrase, filterDevice, filterEnvironment]);
 
   // Statistics Computations
   const stats = useMemo(() => {
@@ -207,7 +205,7 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
       const zip = new JSZip();
       
       // Header for CSV metadata
-      let csvContent = 'participant_id,phrase,label,accent,native_language,device_type,environment,audio_file,duration,timestamp\n';
+      let csvContent = 'participant_id,phrase,label,device_type,environment,audio_file,duration,timestamp\n';
       
       // Fetch all audios concurrently in batches of 10 to avoid overloading network/memory
       const batchSize = 10;
@@ -235,12 +233,10 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
               zip.file(relativePath, buffer);
               
               // Append to CSV metadata
-              const accent = rec.participant?.accent || 'Unknown';
-              const nativeLang = rec.participant?.native_language || 'N/A';
               const device = rec.participant?.device_type || 'Unknown';
               const environment = rec.participant?.environment || 'Unknown';
               
-              csvContent += `"${pCode}","${rec.phrase}","${label}","${accent}","${nativeLang}","${device}","${environment}","${relativePath}",${rec.duration},"${rec.created_at}"\n`;
+              csvContent += `"${pCode}","${rec.phrase}","${label}","${device}","${environment}","${relativePath}",${rec.duration},"${rec.created_at}"\n`;
             } catch (err) {
               console.error(`Failed to add audio: ${rec.audio_url}`, err);
             }
@@ -465,7 +461,7 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           
           {/* Search box */}
           <div className="relative">
@@ -489,20 +485,6 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
               <option value="All">All Phrases</option>
               {phraseOptions.map(p => (
                 <option key={p} value={p}>{p}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Accent filter */}
-          <div>
-            <select
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/40 text-slate-300 focus:outline-none focus:border-purple-500 text-xs sm:text-sm cursor-pointer"
-              value={filterAccent}
-              onChange={(e) => setFilterAccent(e.target.value)}
-            >
-              <option value="All">All Accents</option>
-              {['Indian', 'American', 'British', 'Australian', 'Canadian', 'Other'].map(acc => (
-                <option key={acc} value={acc}>{acc}</option>
               ))}
             </select>
           </div>
@@ -611,12 +593,9 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
                         </div>
                       </td>
 
-                      {/* Env, Device & Accent */}
+                      {/* Env & Device */}
                       <td className="py-4 px-6">
                         <div className="text-slate-300">{p.environment} • {p.device_type}</div>
-                        <div className="text-[10px] text-slate-500">
-                          {p.accent} {p.native_language ? `(${p.native_language})` : ''}
-                        </div>
                       </td>
 
                       {/* Duration & Format */}

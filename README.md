@@ -41,8 +41,6 @@ create table if not exists public.participants (
   id uuid primary key default gen_random_uuid(),
   participant_code text not null unique, -- E.g., P001, P002
   name text not null, -- Participant's name
-  accent text not null, -- E.g. Indian, American, British
-  native_language text, -- E.g. English, Hindi
   environment text not null, -- E.g., Quiet Room, Fan Running, TV Background
   device_type text not null, -- E.g., Phone, Laptop, Headset, External Microphone
   consent boolean not null default true,
@@ -128,8 +126,6 @@ The `metadata.csv` file maps recording files to their respective participant att
 - `participant_id` (Code, e.g., `P001`)
 - `phrase`
 - `label` (`positive` or `negative`)
-- `accent`
-- `native_language`
 - `device_type`
 - `environment`
 - `audio_file` (Relative path to the file inside the ZIP archive, e.g. `positive/...`)
