@@ -62,7 +62,9 @@ export async function POST(request: Request) {
 
     if (insertError) {
       console.error('Error inserting participant:', insertError);
-      return NextResponse.json({ error: 'Failed to save participant info to database' }, { status: 500 });
+      return NextResponse.json({ 
+        error: `Failed to save participant: ${insertError.message} (Code: ${insertError.code})` 
+      }, { status: 500 });
     }
 
     return NextResponse.json(data);
