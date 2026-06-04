@@ -153,6 +153,18 @@ export default function RecordPage() {
 
   // 1. Render Instructions / Demo Modal
   const [tutorialStep, setTutorialStep] = useState(1);
+  const practiceRecorder = useAudioRecorder();
+
+  // Practice validation checks
+  const isPracticeTooShort = practiceRecorder.duration > 0 && practiceRecorder.duration < 0.3;
+  const isPracticeTooLong = practiceRecorder.duration > 5.0;
+  const isPracticeValid = practiceRecorder.duration >= 0.3 && practiceRecorder.duration <= 5.0 && practiceRecorder.audioBlob !== null;
+
+  const handleStartRealSession = () => {
+    // Reset practice recorder to release stream
+    practiceRecorder.resetRecording();
+    setShowInstructions(false);
+  };
 
   if (showInstructions) {
     return (
@@ -162,11 +174,12 @@ export default function RecordPage() {
           {/* Stepper Header */}
           <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
             <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
-              Tutorial Step {tutorialStep} of 2
+              Tutorial Step {tutorialStep} of 3
             </span>
             <div className="flex gap-1">
-              <div className={`h-1.5 w-6 rounded-full transition-all duration-300 ${tutorialStep === 1 ? 'bg-indigo-500' : 'bg-slate-800'}`} />
-              <div className={`h-1.5 w-6 rounded-full transition-all duration-300 ${tutorialStep === 2 ? 'bg-indigo-500' : 'bg-slate-800'}`} />
+              <div className={`h-1.5 w-4 rounded-full transition-all duration-300 ${tutorialStep === 1 ? 'bg-indigo-500' : 'bg-slate-800'}`} />
+              <div className={`h-1.5 w-4 rounded-full transition-all duration-300 ${tutorialStep === 2 ? 'bg-indigo-500' : 'bg-slate-800'}`} />
+              <div className={`h-1.5 w-4 rounded-full transition-all duration-300 ${tutorialStep === 3 ? 'bg-indigo-500' : 'bg-slate-800'}`} />
             </div>
           </div>
 
@@ -212,7 +225,7 @@ export default function RecordPage() {
                 Next: Interface Walkthrough
               </Button>
             </div>
-          ) : (
+          ) : tutorialStep === 2 ? (
             /* STEP 2: INTERACTIVE WALKTHROUGH */
             <div className="space-y-5">
               <div className="flex items-center gap-3">
@@ -259,16 +272,135 @@ export default function RecordPage() {
               <div className="flex gap-3">
                 <Button
                   variant="secondary"
-                  className="flex-1 py-3 rounded-xl border border-slate-850"
+                  className="flex-1 py-3"
                   onClick={() => setTutorialStep(1)}
                 >
                   Back
                 </Button>
                 <Button
-                  className="flex-2 py-3.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 border-0"
-                  onClick={() => setShowInstructions(false)}
+                  className="flex-2 py-3.5 text-sm font-semibold rounded-xl"
+                  onClick={() => setTutorialStep(3)}
+                  rightIcon={<ArrowRight className="h-4 w-4" />}
                 >
-                  Start Session
+                  Next: Try Practice Run
+                </Button>
+              </div>
+            </div>
+          ) : (
+            /* STEP 3: PRACTICE RECORDING RUN */
+            <div className="space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-pink-500/10 flex items-center justify-center border border-pink-500/20 text-pink-400">
+                  <Mic className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-slate-100">3. Practice Run</h2>
+                  <p className="text-[10px] text-slate-400">Test your mic by recording the phrase below.</p>
+                </div>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-slate-800 bg-slate-950/60 space-y-4">
+                <div className="text-center py-2">
+                  <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Test Phrase</div>
+                  <div className="text-xl font-extrabold text-white">"Hello Iris"</div>
+                </div>
+
+                {/* Animated wave visualizer */}
+                <AudioVisualizer
+                  isRecording={practiceRecorder.recordingState === 'recording'}
+                  isPlaying={practiceRecorder.recordingState === 'playing'}
+                />
+
+                {/* Duration & Validation text */}
+                <div className="min-h-[36px] flex flex-col items-center justify-center text-center">
+                  {practiceRecorder.error && (
+                    <span className="text-xs text-rose-400">{practiceRecorder.error}</span>
+                  )}
+                  {isPracticeTooShort && (
+                    <span className="text-xs text-rose-400 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" /> Too short ({practiceRecorder.duration.toFixed(2)}s). Keep it &gt; 0.3s.
+                    </span>
+                  )}
+                  {isPracticeTooLong && (
+                    <span className="text-xs text-rose-400 flex items-center gap-1">
+                      <AlertTriangle className="h-3 w-3" /> Too long ({practiceRecorder.duration.toFixed(2)}s). Keep it &lt; 5.0s.
+                    </span>
+                  )}
+                  {isPracticeValid && (
+                    <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
+                      <CheckCircle2 className="h-3 w-3" /> Perfect! ({practiceRecorder.duration.toFixed(2)}s). Click Start below.
+                    </span>
+                  )}
+                  {!practiceRecorder.error && !isPracticeTooShort && !isPracticeTooLong && !isPracticeValid && practiceRecorder.recordingState === 'idle' && (
+                    <span className="text-xs text-slate-500">Tap mic to speak</span>
+                  )}
+                  {practiceRecorder.recordingState === 'recording' && (
+                    <span className="text-xs text-pink-400 font-semibold animate-pulse">Recording... {practiceRecorder.duration.toFixed(1)}s</span>
+                  )}
+                </div>
+
+                {/* Controller Buttons */}
+                <div className="flex justify-center gap-3">
+                  {practiceRecorder.recordingState === 'idle' && (
+                    <Button
+                      size="sm"
+                      className="h-12 w-12 rounded-full bg-pink-600 hover:bg-pink-500 border-0 flex items-center justify-center scale-100 hover:scale-105 active:scale-95"
+                      onClick={practiceRecorder.startRecording}
+                    >
+                      <Mic className="h-5 w-5 text-white" />
+                    </Button>
+                  )}
+
+                  {practiceRecorder.recordingState === 'recording' && (
+                    <Button
+                      size="sm"
+                      className="h-12 w-12 rounded-full bg-slate-900 border border-pink-500/40 flex items-center justify-center hover:bg-slate-800"
+                      onClick={practiceRecorder.stopRecording}
+                    >
+                      <Square className="h-4 w-4 text-pink-500 fill-pink-500" />
+                    </Button>
+                  )}
+
+                  {(practiceRecorder.recordingState === 'stopped' || practiceRecorder.recordingState === 'playing') && (
+                    <div className="flex gap-2 w-full">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
+                        leftIcon={<Play className="h-3 w-3 text-purple-400 fill-purple-400" />}
+                        onClick={practiceRecorder.playRecording}
+                      >
+                        Play
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="flex-1 text-slate-400 hover:text-slate-200 border border-slate-800 bg-slate-900/10"
+                        leftIcon={<RotateCcw className="h-3 w-3" />}
+                        onClick={practiceRecorder.resetRecording}
+                      >
+                        Retake
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  className="flex-1 py-3"
+                  onClick={() => setTutorialStep(2)}
+                  disabled={practiceRecorder.recordingState === 'recording'}
+                >
+                  Back
+                </Button>
+                <Button
+                  className="flex-2 py-3.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 border-0 disabled:opacity-50"
+                  disabled={!isPracticeValid || practiceRecorder.recordingState === 'recording'}
+                  onClick={handleStartRealSession}
+                >
+                  Start Real Session
                 </Button>
               </div>
             </div>
