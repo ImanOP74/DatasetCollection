@@ -299,6 +299,59 @@ export default function RecordPage() {
                 </div>
               </div>
 
+              {/* Dynamic Guidance Step Box */}
+              <div className="p-4 rounded-xl bg-slate-900/80 border border-indigo-500/20 text-xs text-slate-300 flex items-start gap-2">
+                <div className="h-5 w-5 rounded bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-[10px] font-bold text-indigo-400 flex-shrink-0 mt-0.5">
+                  {(() => {
+                    if (practiceRecorder.recordingState === 'idle') return '1';
+                    if (practiceRecorder.recordingState === 'recording') return '2';
+                    return '3';
+                  })()}
+                </div>
+                <div className="space-y-0.5">
+                  <span className="font-semibold text-slate-200 block text-[11px] uppercase tracking-wider">
+                    {(() => {
+                      if (practiceRecorder.recordingState === 'idle') return 'Action Required: Start';
+                      if (practiceRecorder.recordingState === 'recording') return 'Action Required: Speak & Stop';
+                      return 'Action Required: Review';
+                    })()}
+                  </span>
+                  <span className={
+                    practiceRecorder.recordingState === 'recording'
+                      ? 'text-pink-400 animate-pulse font-medium'
+                      : practiceRecorder.recordingState === 'playing'
+                      ? 'text-indigo-400 font-medium'
+                      : isPracticeValid
+                      ? 'text-emerald-400 font-medium'
+                      : isPracticeTooShort || isPracticeTooLong
+                      ? 'text-rose-400 font-medium'
+                      : 'text-slate-300'
+                  }>
+                    {(() => {
+                      if (practiceRecorder.recordingState === 'idle') {
+                        return 'Click the pink Microphone button below and say "Hello Iris" clearly.';
+                      }
+                      if (practiceRecorder.recordingState === 'recording') {
+                        return 'Say "Hello Iris" now, then click the Stop button (square icon) to finish.';
+                      }
+                      if (practiceRecorder.recordingState === 'playing') {
+                        return 'Listening to your recording...';
+                      }
+                      if (isPracticeValid) {
+                        return 'Perfect! Your recording passed checks. Play it back, or click "Start Real Session" to begin.';
+                      }
+                      if (isPracticeTooShort) {
+                        return 'Too short! Click "Retake" and say the phrase again, speaking slightly slower.';
+                      }
+                      if (isPracticeTooLong) {
+                        return 'Too long! Click "Retake" and record only the requested phrase.';
+                      }
+                      return 'Test your mic settings before continuing.';
+                    })()}
+                  </span>
+                </div>
+              </div>
+
               <div className="p-5 rounded-2xl border border-slate-800 bg-slate-950/60 space-y-4">
                 <div className="text-center py-2">
                   <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-1">Test Phrase</div>
@@ -328,7 +381,7 @@ export default function RecordPage() {
                   )}
                   {isPracticeValid && (
                     <span className="text-xs text-emerald-400 flex items-center gap-1 font-semibold">
-                      <CheckCircle2 className="h-3 w-3" /> Perfect! ({practiceRecorder.duration.toFixed(2)}s). Click Start below.
+                      <CheckCircle2 className="h-3 w-3" /> Perfect! ({practiceRecorder.duration.toFixed(2)}s)
                     </span>
                   )}
                   {!practiceRecorder.error && !isPracticeTooShort && !isPracticeTooLong && !isPracticeValid && practiceRecorder.recordingState === 'idle' && (
