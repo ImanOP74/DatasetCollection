@@ -270,8 +270,8 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
 
   // Phrases, Devices, Environments lists for dropdowns
   const phraseOptions = [
-    'Iris', 'Hey Iris', 'Hello Iris', 'Okay Iris', 'Wake up Iris', 'Iris please', 'Good morning Iris',
-    'Irish', 'Paris', 'Virus', 'Alice', 'Aries'
+    'Iris', 'Hey Iris', 'Hello Iris', 'Okay Iris', 'Wake up Iris',
+    'Irish', 'Paris', 'Virus'
   ];
 
   const deviceOptions = ['Phone', 'Laptop', 'Headset', 'External Microphone'];
@@ -566,7 +566,7 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
                       <td className="py-4 px-6">
                         <div className="font-semibold text-slate-300">"{rec.phrase}"</div>
                         <div className="text-[9px] mt-0.5">
-                          {phraseOptions.indexOf(rec.phrase) >= 0 && phraseOptions.indexOf(rec.phrase) <= 9 ? (
+                          {['Iris', 'Hey Iris', 'Hello Iris', 'Okay Iris', 'Wake up Iris'].includes(rec.phrase) ? (
                             <span className="text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded">Positive</span>
                           ) : (
                             <span className="text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">Negative</span>
