@@ -34,11 +34,11 @@ const PHRASES = [
 
 export default function RecordPage() {
   const router = useRouter();
-  
+
   // Participant State
   const [participantId, setParticipantId] = useState<string | null>(null);
   const [participantCode, setParticipantCode] = useState<string | null>(null);
-  
+
   // Workflow States
   const [showInstructions, setShowInstructions] = useState(true);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
@@ -63,7 +63,7 @@ export default function RecordPage() {
   useEffect(() => {
     const storedId = localStorage.getItem('participant_id');
     const storedCode = localStorage.getItem('participant_code');
-    
+
     if (!storedId || !storedCode) {
       router.push('/info');
     } else {
@@ -151,48 +151,128 @@ export default function RecordPage() {
     router.push('/');
   };
 
-  // 1. Render Instructions Modal
+  // 1. Render Instructions / Demo Modal
+  const [tutorialStep, setTutorialStep] = useState(1);
+
   if (showInstructions) {
     return (
       <main className="flex-1 flex flex-col justify-center items-center px-4 py-16 relative">
-        <div className="max-w-md w-full glass p-8 rounded-2xl space-y-6 shadow-2xl z-10 border-indigo-500/20">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
-              <Sparkles className="h-5 w-5" />
+        <div className="max-w-md w-full glass p-8 rounded-3xl space-y-6 shadow-2xl z-10 border-indigo-500/20">
+          
+          {/* Stepper Header */}
+          <div className="flex justify-between items-center pb-2 border-b border-slate-800/80">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-400">
+              Tutorial Step {tutorialStep} of 2
+            </span>
+            <div className="flex gap-1">
+              <div className={`h-1.5 w-6 rounded-full transition-all duration-300 ${tutorialStep === 1 ? 'bg-indigo-500' : 'bg-slate-800'}`} />
+              <div className={`h-1.5 w-6 rounded-full transition-all duration-300 ${tutorialStep === 2 ? 'bg-indigo-500' : 'bg-slate-800'}`} />
             </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-slate-100">Recording Instructions</h2>
           </div>
 
-          <div className="space-y-4 text-slate-300 leading-relaxed text-sm">
-            <p className="font-semibold text-slate-200">
-              To train a highly accurate model, please vary your voice across the recordings:
-            </p>
-            <ul className="space-y-3 list-none pl-1">
-              <li className="flex items-start gap-2.5">
-                <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5">1</div>
-                <span>Speak **naturally** as you would to a voice assistant.</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5">2</div>
-                <span>Try different **speeds** (fast, standard, slow).</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5">3</div>
-                <span>Try different **volumes** (whispered, normal, louder).</span>
-              </li>
-              <li className="flex items-start gap-2.5">
-                <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5">4</div>
-                <span>Sometimes record **close** to the microphone, and sometimes record **further away**.</span>
-              </li>
-            </ul>
-          </div>
+          {tutorialStep === 1 ? (
+            /* STEP 1: RULES & GUIDELINES */
+            <div className="space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
+                  <Sparkles className="h-5 w-5" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-100">1. Speak Varied</h2>
+              </div>
 
-          <Button
-            className="w-full py-3.5 text-sm font-semibold rounded-xl"
-            onClick={() => setShowInstructions(false)}
-          >
-            I Understand, Let's Start
-          </Button>
+              <div className="space-y-4 text-slate-300 leading-relaxed text-sm">
+                <p className="font-semibold text-slate-200">
+                  Neural networks need to hear the wake word spoken in different ways. Please vary your recordings:
+                </p>
+                <ul className="space-y-3 list-none pl-1 text-xs sm:text-sm">
+                  <li className="flex items-start gap-2.5">
+                    <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5 flex-shrink-0">✓</div>
+                    <span>Speak **naturally** (don't sound like a robot).</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5 flex-shrink-0">✓</div>
+                    <span>Vary your **speed** (some fast, some slower).</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5 flex-shrink-0">✓</div>
+                    <span>Vary your **volume** (whispered, normal, louder).</span>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <div className="h-5 w-5 rounded-full bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-xs text-purple-300 mt-0.5 flex-shrink-0">✓</div>
+                    <span>Record **close** to the mic, then **farther away** (arm's length).</span>
+                  </li>
+                </ul>
+              </div>
+
+              <Button
+                className="w-full py-3.5 text-sm font-semibold rounded-xl"
+                onClick={() => setTutorialStep(2)}
+                rightIcon={<ArrowRight className="h-4 w-4" />}
+              >
+                Next: Interface Walkthrough
+              </Button>
+            </div>
+          ) : (
+            /* STEP 2: INTERACTIVE WALKTHROUGH */
+            <div className="space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-purple-500/10 flex items-center justify-center border border-purple-500/20 text-purple-400">
+                  <Mic className="h-5 w-5" />
+                </div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-100">2. How to Record</h2>
+              </div>
+
+              {/* Visual mini-mockup of recording layout */}
+              <div className="p-4 rounded-2xl border border-slate-800 bg-slate-950/50 space-y-4">
+                <div className="text-center font-bold text-lg text-slate-100">"Iris"</div>
+                
+                {/* Visualizer mock */}
+                <div className="h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center gap-1">
+                  <div className="w-1.5 h-3 bg-purple-500/40 rounded-full" />
+                  <div className="w-1.5 h-5 bg-purple-500/60 rounded-full" />
+                  <div className="w-1.5 h-7 bg-purple-500/80 rounded-full animate-pulse" />
+                  <div className="w-1.5 h-5 bg-purple-500/60 rounded-full" />
+                  <div className="w-1.5 h-3 bg-purple-500/40 rounded-full" />
+                </div>
+
+                {/* Steps flowchart */}
+                <div className="space-y-3 text-xs leading-relaxed text-slate-400">
+                  <div className="flex gap-2">
+                    <span className="font-bold text-purple-400">Step A:</span>
+                    <span>Tap the **Microphone** button to start recording and speak the phrase.</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-bold text-purple-400">Step B:</span>
+                    <span>Tap **Stop** (square icon) as soon as you finish speaking.</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-bold text-purple-400">Step C:</span>
+                    <span>Click **Listen** to check your audio, or **Retake** to record it again.</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-bold text-purple-400">Step D:</span>
+                    <span>Click **Submit** to upload. Clips must be between **0.3s and 5.0s** to pass.</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  className="flex-1 py-3 rounded-xl border border-slate-850"
+                  onClick={() => setTutorialStep(1)}
+                >
+                  Back
+                </Button>
+                <Button
+                  className="flex-2 py-3.5 text-sm font-semibold rounded-xl bg-gradient-to-r from-indigo-500 to-purple-500 border-0"
+                  onClick={() => setShowInstructions(false)}
+                >
+                  Start Session
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     );
@@ -211,7 +291,7 @@ export default function RecordPage() {
 
           <div className="space-y-4">
             <h2 className="text-2xl font-bold text-slate-100">Contribution Complete!</h2>
-            
+
             <div className="text-slate-300 text-xs sm:text-sm leading-relaxed space-y-3 text-left bg-slate-950/45 p-6 rounded-2xl border border-slate-800/80">
               <p className="font-semibold text-slate-100">Dear Contributor,</p>
               <p>
@@ -221,7 +301,7 @@ export default function RecordPage() {
                 We know recording can get tedious, which is why we shortened the list. We are deeply grateful for your support! Your data has been securely saved and will go directly towards refining our wake-word engine.
               </p>
               <p className="text-xs text-slate-400 italic">
-                With sincere gratitude,<br/>
+                With sincere gratitude,<br />
                 — The IRIS Assistant Team
               </p>
             </div>
@@ -257,7 +337,7 @@ export default function RecordPage() {
   return (
     <main className="flex-1 flex flex-col justify-center items-center px-4 py-8 relative">
       <div className="max-w-lg w-full z-10 space-y-6">
-        
+
         {/* Session Top Header */}
         <div className="flex justify-between items-center px-2">
           <div className="space-y-0.5">
@@ -282,14 +362,13 @@ export default function RecordPage() {
 
         {/* Recording Card */}
         <div className="glass p-8 rounded-3xl space-y-8 shadow-2xl border-slate-800 relative">
-          
+
           {/* Label Type */}
           <div className="flex justify-center">
-            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${
-              currentPhrase?.type === 'positive'
+            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase border ${currentPhrase?.type === 'positive'
                 ? 'bg-purple-950/30 border-purple-500/25 text-purple-300'
                 : 'bg-rose-950/30 border-rose-500/25 text-rose-300'
-            }`}>
+              }`}>
               {currentPhrase?.type === 'positive' ? 'Wake Word Phrase' : 'Hard Negative Distractor'}
             </span>
           </div>
@@ -309,7 +388,7 @@ export default function RecordPage() {
 
           {/* Live / Final Duration and Validation Message */}
           <div className="min-h-[50px] flex flex-col items-center justify-center text-center space-y-2">
-            
+
             {/* Show error states */}
             {micError && (
               <div className="flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/25">
@@ -317,7 +396,7 @@ export default function RecordPage() {
                 <span>{micError}</span>
               </div>
             )}
-            
+
             {uploadError && (
               <div className="flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/25">
                 <AlertTriangle className="h-3.5 w-3.5" />
@@ -327,11 +406,10 @@ export default function RecordPage() {
 
             {/* Validation Message Display */}
             {!micError && !uploadError && validation && (
-              <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border ${
-                validation.type === 'error'
+              <div className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border ${validation.type === 'error'
                   ? 'text-rose-400 bg-rose-500/10 border-rose-500/25'
                   : 'text-emerald-400 bg-emerald-500/10 border-emerald-500/25'
-              }`}>
+                }`}>
                 {validation.type === 'error' ? (
                   <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0" />
                 ) : (
@@ -359,7 +437,7 @@ export default function RecordPage() {
 
           {/* Action Buttons Section */}
           <div className="flex flex-col items-center gap-4">
-            
+
             {/* Record / Stop Toggle */}
             {recordingState === 'idle' && (
               <Button
@@ -430,8 +508,8 @@ export default function RecordPage() {
               {currentPhraseIndex % 3 === 0
                 ? "Try saying this phrase normally and naturally."
                 : currentPhraseIndex % 3 === 1
-                ? "Try speaking slightly faster or slower than normal."
-                : "Try speaking from a different distance or slightly louder."}
+                  ? "Try speaking slightly faster or slower than normal."
+                  : "Try speaking from a different distance or slightly louder."}
             </span>
           </div>
         </div>
