@@ -15,22 +15,71 @@ import {
   AlertTriangle,
   ArrowRight,
   Sparkles,
-  Info
+  Info,
+  RefreshCw
 } from 'lucide-react';
 import Link from 'next/link';
+import { CompletionScreen } from './CompletionScreen';
 
-const PHRASES = [
-  { text: 'Iris', type: 'positive', id: 'iris_1' },
-  { text: 'Iris', type: 'positive', id: 'iris_2' },
-  { text: 'Iris', type: 'positive', id: 'iris_3' },
-  { text: 'Hey Iris', type: 'positive', id: 'hey_iris' },
-  { text: 'Hello Iris', type: 'positive', id: 'hello_iris' },
-  { text: 'Okay Iris', type: 'positive', id: 'okay_iris' },
-  { text: 'Wake up Iris', type: 'positive', id: 'wake_up_iris' },
-  { text: 'Irish', type: 'negative', id: 'irish' },
-  { text: 'Paris', type: 'negative', id: 'paris' },
-  { text: 'Virus', type: 'negative', id: 'virus' }
+const GREETINGS = [
+  'Hey Iris', 'Hello Iris', 'Hi Iris', 'Okay Iris', 'Wake up Iris', 'Good morning Iris', 'Good evening Iris'
 ];
+
+const COMMAND_STYLE = [
+  'Iris open Chrome', 'Iris play music', 'Iris what\'s the weather', 'Iris tell me the time',
+  'Iris open YouTube', 'Iris search Google', 'Iris turn on the lights', 'Iris pause music',
+  'Iris open settings', 'Iris start assistant'
+];
+
+const CASUAL = [
+  'Can you hear me Iris', 'Are you there Iris', 'Thanks Iris', 'Please help Iris', 'Listen Iris'
+];
+
+const POSITIVE_POOL = [...GREETINGS, ...COMMAND_STYLE, ...CASUAL];
+
+const NEGATIVE_POOL = ['Irish', 'Paris', 'Virus', 'Alice', 'Aries'];
+
+function generateRandomPhrases() {
+  // 1. Always include 3 "Iris" recordings
+  const core = [
+    { text: 'Iris', type: 'positive', id: 'iris_1' },
+    { text: 'Iris', type: 'positive', id: 'iris_2' },
+    { text: 'Iris', type: 'positive', id: 'iris_3' }
+  ];
+
+  // 2. Randomly select 4 additional positive phrases using Fisher-Yates shuffle
+  const shuffledPositives = [...POSITIVE_POOL];
+  for (let i = shuffledPositives.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledPositives[i], shuffledPositives[j]] = [shuffledPositives[j], shuffledPositives[i]];
+  }
+  const selectedPositives = shuffledPositives.slice(0, 4).map((p, idx) => ({
+    text: p,
+    type: 'positive',
+    id: `pos_${idx}`
+  }));
+
+  // 3. Randomly select 3 negative phrases using Fisher-Yates shuffle
+  const shuffledNegatives = [...NEGATIVE_POOL];
+  for (let i = shuffledNegatives.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffledNegatives[i], shuffledNegatives[j]] = [shuffledNegatives[j], shuffledNegatives[i]];
+  }
+  const selectedNegatives = shuffledNegatives.slice(0, 3).map((n, idx) => ({
+    text: n,
+    type: 'negative',
+    id: `neg_${idx}`
+  }));
+
+  // 4. Combine and Shuffle all 10 phrases
+  const allPhrases = [...core, ...selectedPositives, ...selectedNegatives];
+  for (let i = allPhrases.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [allPhrases[i], allPhrases[j]] = [allPhrases[j], allPhrases[i]];
+  }
+
+  return allPhrases;
+}
 
 export default function RecordPage() {
   const router = useRouter();
@@ -41,6 +90,7 @@ export default function RecordPage() {
 
   // Workflow States
   const [showInstructions, setShowInstructions] = useState(true);
+  const [phrases, setPhrases] = useState<{ text: string; type: string; id: string }[]>([]);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -59,20 +109,36 @@ export default function RecordPage() {
     resetRecording
   } = useAudioRecorder();
 
-  // Load participant cache
+  // Load participant cache and retrieve/generate phrases
   useEffect(() => {
     const storedId = localStorage.getItem('participant_id');
     const storedCode = localStorage.getItem('participant_code');
 
     if (!storedId || !storedCode) {
       router.push('/info');
+      return;
+    }
+
+    setParticipantId(storedId);
+    setParticipantCode(storedCode);
+
+    const storedPhrases = localStorage.getItem('participant_phrases');
+    if (storedPhrases) {
+      try {
+        setPhrases(JSON.parse(storedPhrases));
+      } catch (e) {
+        const newPhrases = generateRandomPhrases();
+        localStorage.setItem('participant_phrases', JSON.stringify(newPhrases));
+        setPhrases(newPhrases);
+      }
     } else {
-      setParticipantId(storedId);
-      setParticipantCode(storedCode);
+      const newPhrases = generateRandomPhrases();
+      localStorage.setItem('participant_phrases', JSON.stringify(newPhrases));
+      setPhrases(newPhrases);
     }
   }, [router]);
 
-  const currentPhrase = PHRASES[currentPhraseIndex];
+  const currentPhrase = phrases[currentPhraseIndex];
 
   // Validation checks
   const isTooShort = duration > 0 && duration < 0.3;
@@ -129,7 +195,7 @@ export default function RecordPage() {
       }
 
       // Proceed to next phrase
-      if (currentPhraseIndex < PHRASES.length - 1) {
+      if (currentPhraseIndex < phrases.length - 1) {
         setCurrentPhraseIndex(prev => prev + 1);
         resetRecording();
       } else {
@@ -148,6 +214,7 @@ export default function RecordPage() {
     localStorage.removeItem('participant_id');
     localStorage.removeItem('participant_code');
     localStorage.removeItem('participant_name');
+    localStorage.removeItem('participant_phrases');
     router.push('/');
   };
 
@@ -165,6 +232,17 @@ export default function RecordPage() {
     practiceRecorder.resetRecording();
     setShowInstructions(false);
   };
+
+  if (phrases.length === 0) {
+    return (
+      <main className="flex-1 flex flex-col justify-center items-center px-4 py-16">
+        <div className="text-center space-y-3">
+          <RefreshCw className="h-8 w-8 text-purple-400 animate-spin mx-auto" />
+          <p className="text-sm text-slate-400">Loading your session...</p>
+        </div>
+      </main>
+    );
+  }
 
   if (showInstructions) {
     return (
@@ -466,55 +544,10 @@ export default function RecordPage() {
   // 2. Render Completion Screen
   if (isCompleted) {
     return (
-      <main className="flex-1 flex flex-col justify-center items-center px-4 py-16 relative">
-        <div className="max-w-md w-full glass p-8 rounded-3xl space-y-6 text-center shadow-2xl z-10 border-emerald-500/20">
-          <div className="flex justify-center">
-            <div className="h-14 w-14 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
-              <CheckCircle2 className="h-8 w-8 animate-bounce" />
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-slate-100">Contribution Complete!</h2>
-
-            <div className="text-slate-300 text-xs sm:text-sm leading-relaxed space-y-3 text-left bg-slate-950/45 p-6 rounded-2xl border border-slate-800/80">
-              <p className="font-semibold text-slate-100">Dear Contributor,</p>
-              <p>
-                Thank you so much for taking the time to record these phrases. Building a voice assistant that is truly local, offline, and private requires diverse training voices, and your contribution has brought us one step closer to making **Iris** responsive and accurate.
-              </p>
-              <p>
-                We know recording can get tedious, which is why we shortened the list. We are deeply grateful for your support! Your data has been securely saved and will go directly towards refining our wake-word engine.
-              </p>
-              <p className="text-xs text-slate-400 italic">
-                With sincere gratitude,<br />
-                — The IRIS Assistant Team
-              </p>
-            </div>
-          </div>
-
-          <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-sm space-y-1">
-            <div className="text-xs text-slate-500">Your Anonymous Contributor Code</div>
-            <div className="text-xl font-extrabold tracking-widest text-slate-200">{participantCode}</div>
-          </div>
-
-          <div className="space-y-3 pt-2">
-            <Button
-              className="w-full py-3"
-              onClick={handleStartNewSession}
-            >
-              Contribute Again
-            </Button>
-            <Link href="/" className="block">
-              <Button
-                variant="secondary"
-                className="w-full py-3 text-slate-400"
-              >
-                Go back to home
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </main>
+      <CompletionScreen
+        participantCode={participantCode || ''}
+        onStartNewSession={handleStartNewSession}
+      />
     );
   }
 
@@ -532,7 +565,7 @@ export default function RecordPage() {
           <div className="text-right space-y-0.5">
             <div className="text-xs text-slate-500">Progress</div>
             <div className="text-sm font-semibold text-slate-300">
-              Phrase {currentPhraseIndex + 1} of {PHRASES.length}
+              Phrase {currentPhraseIndex + 1} of {phrases.length}
             </div>
           </div>
         </div>
@@ -541,7 +574,7 @@ export default function RecordPage() {
         <div className="h-1.5 w-full bg-slate-900 rounded-full overflow-hidden border border-slate-800/40">
           <div
             className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 transition-all duration-500"
-            style={{ width: `${((currentPhraseIndex) / PHRASES.length) * 100}%` }}
+            style={{ width: `${((currentPhraseIndex) / phrases.length) * 100}%` }}
           />
         </div>
 

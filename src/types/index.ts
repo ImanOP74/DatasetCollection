@@ -2,6 +2,8 @@ export interface Participant {
   id: string;
   participant_code: string;
   name: string;
+  accent: string;
+  native_language?: string;
   environment: string;
   device_type: string;
   consent: boolean;
@@ -26,6 +28,8 @@ export interface RecordingWithParticipant extends Recording {
   participant: {
     participant_code: string;
     name: string;
+    accent: string;
+    native_language?: string;
     environment: string;
     device_type: string;
   };

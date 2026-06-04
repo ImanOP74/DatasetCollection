@@ -43,6 +43,7 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
   const [filterPhrase, setFilterPhrase] = useState('All');
   const [filterDevice, setFilterDevice] = useState('All');
   const [filterEnvironment, setFilterEnvironment] = useState('All');
+  const [filterAccent, setFilterAccent] = useState('All');
 
   // Export Progress State
   const [isExporting, setIsExporting] = useState(false);
@@ -172,10 +173,11 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
       const matchPhrase = filterPhrase === 'All' || rec.phrase === filterPhrase;
       const matchDevice = filterDevice === 'All' || participant.device_type === filterDevice;
       const matchEnv = filterEnvironment === 'All' || participant.environment === filterEnvironment;
+      const matchAccent = filterAccent === 'All' || participant.accent === filterAccent;
 
-      return matchSearch && matchPhrase && matchDevice && matchEnv;
+      return matchSearch && matchPhrase && matchDevice && matchEnv && matchAccent;
     });
-  }, [recordings, searchTerm, filterPhrase, filterDevice, filterEnvironment]);
+  }, [recordings, searchTerm, filterPhrase, filterDevice, filterEnvironment, filterAccent]);
 
   // Statistics Computations
   const stats = useMemo(() => {
@@ -205,7 +207,7 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
       const zip = new JSZip();
       
       // Header for CSV metadata
-      let csvContent = 'participant_id,name,device_type,environment,phrase,audio_file,duration,timestamp\n';
+      let csvContent = 'participant_id,phrase,label,accent,native_language,device_type,environment,audio_file,duration,timestamp\n';
       
       // Fetch all audios concurrently in batches of 10 to avoid overloading network/memory
       const batchSize = 10;
@@ -219,7 +221,9 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
             const timestamp = new Date(rec.created_at).getTime();
             const ext = rec.file_format || 'webm';
             
-            const relativePath = `recordings/participant_${pCode}/${cleanPhrase}_${timestamp}.${ext}`;
+            // Categorize into positive/negative folders
+            const label = ['irish', 'paris', 'virus', 'alice', 'aries'].includes(rec.phrase.trim().toLowerCase()) ? 'negative' : 'positive';
+            const relativePath = `${label}/participant_${pCode}_${cleanPhrase}_${timestamp}.${ext}`;
             
             try {
               // Fetch file blob from Vercel Blob URL
@@ -231,8 +235,12 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
               zip.file(relativePath, buffer);
               
               // Append to CSV metadata
-              const nameSafe = (rec.participant?.name || 'Anonymous').replace(/"/g, '""');
-              csvContent += `"${pCode}","${nameSafe}","${rec.participant?.device_type || 'Unknown'}","${rec.participant?.environment || 'Unknown'}","${rec.phrase}","${relativePath}",${rec.duration},"${rec.created_at}"\n`;
+              const accent = rec.participant?.accent || 'Unknown';
+              const nativeLang = rec.participant?.native_language || 'N/A';
+              const device = rec.participant?.device_type || 'Unknown';
+              const environment = rec.participant?.environment || 'Unknown';
+              
+              csvContent += `"${pCode}","${rec.phrase}","${label}","${accent}","${nativeLang}","${device}","${environment}","${relativePath}",${rec.duration},"${rec.created_at}"\n`;
             } catch (err) {
               console.error(`Failed to add audio: ${rec.audio_url}`, err);
             }
@@ -268,11 +276,26 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
     }
   };
 
-  // Phrases, Devices, Environments lists for dropdowns
-  const phraseOptions = [
-    'Iris', 'Hey Iris', 'Hello Iris', 'Okay Iris', 'Wake up Iris',
-    'Irish', 'Paris', 'Virus'
-  ];
+  // Phrases lists computed dynamically to ensure all custom / new phrases show up
+  const phraseOptions = useMemo(() => {
+    const set = new Set<string>();
+    recordings.forEach(r => {
+      if (r.phrase) {
+        set.add(r.phrase.trim());
+      }
+    });
+    const defaults = [
+      'Iris', 'Hey Iris', 'Hello Iris', 'Hi Iris', 'Okay Iris', 'Wake up Iris',
+      'Good morning Iris', 'Good evening Iris', 'Iris open Chrome', 'Iris play music',
+      'Iris what\'s the weather', 'Iris tell me the time', 'Iris open YouTube',
+      'Iris search Google', 'Iris turn on the lights', 'Iris pause music',
+      'Iris open settings', 'Iris start assistant', 'Can you hear me Iris',
+      'Are you there Iris', 'Thanks Iris', 'Please help Iris', 'Listen Iris',
+      'Irish', 'Paris', 'Virus', 'Alice', 'Aries'
+    ];
+    defaults.forEach(d => set.add(d));
+    return Array.from(set).sort();
+  }, [recordings]);
 
   const deviceOptions = ['Phone', 'Laptop', 'Headset', 'External Microphone'];
   const envOptions = ['Quiet Room', 'Fan Running', 'TV Background', 'Outside', 'Classroom / Office', 'Other'];
@@ -442,7 +465,7 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           
           {/* Search box */}
           <div className="relative">
@@ -466,6 +489,20 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
               <option value="All">All Phrases</option>
               {phraseOptions.map(p => (
                 <option key={p} value={p}>{p}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Accent filter */}
+          <div>
+            <select
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/40 text-slate-300 focus:outline-none focus:border-purple-500 text-xs sm:text-sm cursor-pointer"
+              value={filterAccent}
+              onChange={(e) => setFilterAccent(e.target.value)}
+            >
+              <option value="All">All Accents</option>
+              {['Indian', 'American', 'British', 'Australian', 'Canadian', 'Other'].map(acc => (
+                <option key={acc} value={acc}>{acc}</option>
               ))}
             </select>
           </div>
@@ -566,7 +603,7 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
                       <td className="py-4 px-6">
                         <div className="font-semibold text-slate-300">"{rec.phrase}"</div>
                         <div className="text-[9px] mt-0.5">
-                          {['Iris', 'Hey Iris', 'Hello Iris', 'Okay Iris', 'Wake up Iris'].includes(rec.phrase) ? (
+                          {!['irish', 'paris', 'virus', 'alice', 'aries'].includes(rec.phrase.trim().toLowerCase()) ? (
                             <span className="text-purple-400 bg-purple-500/10 border border-purple-500/20 px-1.5 py-0.5 rounded">Positive</span>
                           ) : (
                             <span className="text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded">Negative</span>
@@ -574,10 +611,12 @@ export function AdminClient({ initialAuth }: AdminClientProps) {
                         </div>
                       </td>
 
-                      {/* Device and Environment */}
+                      {/* Env, Device & Accent */}
                       <td className="py-4 px-6">
-                        <div className="text-slate-300">{p.environment}</div>
-                        <div className="text-[10px] text-slate-500">{p.device_type}</div>
+                        <div className="text-slate-300">{p.environment} • {p.device_type}</div>
+                        <div className="text-[10px] text-slate-500">
+                          {p.accent} {p.native_language ? `(${p.native_language})` : ''}
+                        </div>
                       </td>
 
                       {/* Duration & Format */}

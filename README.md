@@ -41,6 +41,8 @@ create table if not exists public.participants (
   id uuid primary key default gen_random_uuid(),
   participant_code text not null unique, -- E.g., P001, P002
   name text not null, -- Participant's name
+  accent text not null, -- E.g. Indian, American, British
+  native_language text, -- E.g. English, Hindi
   environment text not null, -- E.g., Quiet Room, Fan Running, TV Background
   device_type text not null, -- E.g., Phone, Laptop, Headset, External Microphone
   consent boolean not null default true,
@@ -112,21 +114,24 @@ When exporting the dataset via the admin panel, the downloaded `dataset.zip` con
 ```
 dataset.zip
 ├── metadata.csv
-└── recordings/
-    ├── participant_P001/
-    │   ├── iris_1625078900000.webm
-    │   ├── hey_iris_1625078912000.webm
-    │   └── ...
-    ├── participant_P002/
-    │   └── ...
+├── positive/
+│   ├── participant_P001_iris_1625078900000.webm
+│   ├── participant_P001_hey_iris_1625078912000.webm
+│   └── ...
+└── negative/
+    ├── participant_P001_irish_1625078922000.webm
+    ├── participant_P001_paris_1625078930000.webm
+    └── ...
 ```
 
 The `metadata.csv` file maps recording files to their respective participant attributes and features the columns:
 - `participant_id` (Code, e.g., `P001`)
-- `name`
+- `phrase`
+- `label` (`positive` or `negative`)
+- `accent`
+- `native_language`
 - `device_type`
 - `environment`
-- `phrase`
-- `audio_file` (Relative path to the file inside the ZIP archive)
+- `audio_file` (Relative path to the file inside the ZIP archive, e.g. `positive/...`)
 - `duration` (Audio clip length in seconds)
 - `timestamp`

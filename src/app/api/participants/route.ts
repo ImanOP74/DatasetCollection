@@ -28,9 +28,9 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, environment, device_type, consent } = body;
+    const { name, accent, native_language, environment, device_type, consent } = body;
 
-    if (!name || !environment || !device_type || consent === undefined) {
+    if (!name || !accent || !environment || !device_type || consent === undefined) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -53,6 +53,8 @@ export async function POST(request: Request) {
       .insert({
         participant_code,
         name,
+        accent,
+        native_language,
         environment,
         device_type,
         consent

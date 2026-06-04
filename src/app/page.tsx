@@ -42,9 +42,9 @@ export default function LandingPage() {
             <div className="h-10 w-10 rounded-xl bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20 text-indigo-400">
               <Zap className="h-5 w-5" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-200">15 Quick Phrases</h3>
+            <h3 className="text-lg font-semibold text-slate-200">10 Quick Phrases</h3>
             <p className="text-sm text-slate-400 leading-relaxed">
-              Read 10 variations of the "Iris" wake word and 5 similar sounding negative distractors.
+              Read 7 variations of the "Iris" wake word and 3 similar sounding negative distractors.
             </p>
           </div>
 

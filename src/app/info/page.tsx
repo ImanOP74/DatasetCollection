@@ -8,6 +8,8 @@ import Link from 'next/link';
 
 export default function InfoPage() {
   const [name, setName] = useState('');
+  const [accent, setAccent] = useState('');
+  const [nativeLanguage, setNativeLanguage] = useState('');
   const [environment, setEnvironment] = useState('');
   const [deviceType, setDeviceType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -17,7 +19,7 @@ export default function InfoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !environment || !deviceType) {
+    if (!name.trim() || !accent || !environment || !deviceType) {
       setErrorMsg('Please fill in all required fields.');
       return;
     }
@@ -33,6 +35,8 @@ export default function InfoPage() {
         },
         body: JSON.stringify({
           name: name.trim(),
+          accent,
+          native_language: nativeLanguage.trim() || undefined,
           environment,
           device_type: deviceType,
           consent: true,
@@ -77,7 +81,7 @@ export default function InfoPage() {
             </div>
             <div>
               <h2 className="text-xl sm:text-2xl font-bold text-slate-100">Participant Details</h2>
-              <p className="text-xs text-slate-400">Helps analyze model accuracy across devices and environments.</p>
+              <p className="text-xs text-slate-400">Helps analyze model accuracy across accents, environments, and devices.</p>
             </div>
           </div>
 
@@ -102,6 +106,46 @@ export default function InfoPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
+            </div>
+
+            {/* Grid for Accent & Native Language */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Accent Dropdown */}
+              <div className="space-y-2">
+                <label htmlFor="accent" className="text-xs sm:text-sm font-semibold text-slate-300 block">
+                  Accent <span className="text-pink-500">*</span>
+                </label>
+                <select
+                  id="accent"
+                  required
+                  className="w-full px-4 py-3 rounded-xl border border-slate-800 bg-slate-950/40 text-slate-355 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30 transition-all text-sm cursor-pointer text-slate-300"
+                  value={accent}
+                  onChange={(e) => setAccent(e.target.value)}
+                >
+                  <option value="" disabled className="bg-slate-950">Select accent...</option>
+                  <option value="Indian" className="bg-slate-950">Indian</option>
+                  <option value="American" className="bg-slate-950">American</option>
+                  <option value="British" className="bg-slate-950">British</option>
+                  <option value="Australian" className="bg-slate-950">Australian</option>
+                  <option value="Canadian" className="bg-slate-950">Canadian</option>
+                  <option value="Other" className="bg-slate-950">Other</option>
+                </select>
+              </div>
+
+              {/* Native Language Optional Input */}
+              <div className="space-y-2">
+                <label htmlFor="native-lang" className="text-xs sm:text-sm font-semibold text-slate-300 block">
+                  Native Language <span className="text-slate-550 text-slate-500">(Optional)</span>
+                </label>
+                <input
+                  type="text"
+                  id="native-lang"
+                  placeholder="e.g. English, Hindi"
+                  className="w-full px-4 py-3 rounded-xl border border-slate-800 bg-slate-950/40 text-slate-100 placeholder-slate-550 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500/30 transition-all text-sm"
+                  value={nativeLanguage}
+                  onChange={(e) => setNativeLanguage(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* Device Type Select */}
