@@ -23,18 +23,13 @@ const PHRASES = [
   { text: 'Iris', type: 'positive', id: 'iris_1' },
   { text: 'Iris', type: 'positive', id: 'iris_2' },
   { text: 'Iris', type: 'positive', id: 'iris_3' },
-  { text: 'Iris', type: 'positive', id: 'iris_4' },
   { text: 'Hey Iris', type: 'positive', id: 'hey_iris' },
   { text: 'Hello Iris', type: 'positive', id: 'hello_iris' },
   { text: 'Okay Iris', type: 'positive', id: 'okay_iris' },
   { text: 'Wake up Iris', type: 'positive', id: 'wake_up_iris' },
-  { text: 'Iris please', type: 'positive', id: 'iris_please' },
-  { text: 'Good morning Iris', type: 'positive', id: 'good_morning_iris' },
   { text: 'Irish', type: 'negative', id: 'irish' },
   { text: 'Paris', type: 'negative', id: 'paris' },
-  { text: 'Virus', type: 'negative', id: 'virus' },
-  { text: 'Alice', type: 'negative', id: 'alice' },
-  { text: 'Aries', type: 'negative', id: 'aries' }
+  { text: 'Virus', type: 'negative', id: 'virus' }
 ];
 
 export default function RecordPage() {
@@ -207,22 +202,33 @@ export default function RecordPage() {
   if (isCompleted) {
     return (
       <main className="flex-1 flex flex-col justify-center items-center px-4 py-16 relative">
-        <div className="max-w-md w-full glass p-8 rounded-2xl space-y-6 text-center shadow-2xl z-10 border-emerald-500/20">
+        <div className="max-w-md w-full glass p-8 rounded-3xl space-y-6 text-center shadow-2xl z-10 border-emerald-500/20">
           <div className="flex justify-center">
-            <div className="h-16 w-16 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
-              <CheckCircle2 className="h-10 w-10 animate-bounce" />
+            <div className="h-14 w-14 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 text-emerald-400">
+              <CheckCircle2 className="h-8 w-8 animate-bounce" />
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-4">
             <h2 className="text-2xl font-bold text-slate-100">Contribution Complete!</h2>
-            <p className="text-slate-400 text-sm">
-              Thank you for helping train the IRIS wake-word model. Your voice recordings have been stored.
-            </p>
+            
+            <div className="text-slate-300 text-xs sm:text-sm leading-relaxed space-y-3 text-left bg-slate-950/45 p-6 rounded-2xl border border-slate-800/80">
+              <p className="font-semibold text-slate-100">Dear Contributor,</p>
+              <p>
+                Thank you so much for taking the time to record these phrases. Building a voice assistant that is truly local, offline, and private requires diverse training voices, and your contribution has brought us one step closer to making **Iris** responsive and accurate.
+              </p>
+              <p>
+                We know recording can get tedious, which is why we shortened the list. We are deeply grateful for your support! Your data has been securely saved and will go directly towards refining our wake-word engine.
+              </p>
+              <p className="text-xs text-slate-400 italic">
+                With sincere gratitude,<br/>
+                — The IRIS Assistant Team
+              </p>
+            </div>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-950/40 border border-slate-800 text-sm space-y-1">
-            <div className="text-xs text-slate-500">Your Anonymous Code</div>
+            <div className="text-xs text-slate-500">Your Anonymous Contributor Code</div>
             <div className="text-xl font-extrabold tracking-widest text-slate-200">{participantCode}</div>
           </div>
 
